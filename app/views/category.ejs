@@ -1,0 +1,38 @@
+<%- include('partials/header') %>
+
+<div class="container" style="margin-top: 24px;">
+  <div class="section-title">
+    <h3>Chuyên mục: <%= category.name %></h3>
+  </div>
+
+  <% if (category.description) { %>
+    <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.95rem;"><%= category.description %></p>
+  <% } %>
+
+  <div class="news-grid">
+    <% if (articles && articles.length > 0) { %>
+      <% articles.forEach(item => { %>
+        <div class="news-card">
+          <a href="/article/<%= item.slug %>" class="img-wrap">
+            <img src="<%= item.image_url %>" alt="<%= item.title %>" onerror="this.src='https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=500&q=80'">
+          </a>
+          <div class="news-card-body">
+            <h4><a href="/article/<%= item.slug %>"><%= item.title %></a></h4>
+            <p><%= item.summary %></p>
+            <div class="post-meta" style="margin-top: auto;">
+              <span>📅 <%= new Date(item.created_at).toLocaleDateString('vi-VN') %></span>
+              <span>👁 <%= item.views %> lượt xem</span>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    <% } else { %>
+      <div style="grid-column: 1 / -1; padding: 40px; text-align: center; background: white; border-radius: 8px;">
+        <p style="color: var(--text-muted);">Chuyên mục này hiện tại chưa có bài viết nào.</p>
+        <a href="/" class="btn btn-primary" style="margin-top: 15px;">Quay lại Trang chủ</a>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

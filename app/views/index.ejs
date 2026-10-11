@@ -1,0 +1,129 @@
+<%- include('partials/header') %>
+
+<div class="container">
+  <!-- Breaking News Ticker -->
+  <div class="breaking-bar">
+    <div class="breaking-inner">
+      <span class="breaking-label">⚡ Tin Mới</span>
+      <div class="breaking-text">
+        <% if (latest && latest.length > 0) { %>
+          <a href="/article/<%= latest[0].slug %>"><strong><%= latest[0].title %></strong>: <%= latest[0].summary %></a>
+        <% } else { %>
+          Hệ thống cổng thông tin tin tức đang hoạt động ổn định trên kiến trúc containerized.
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hero Section: Featured articles -->
+  <% if (featured && featured.length > 0) { %>
+    <section class="hero-grid">
+      <!-- Main Featured Post -->
+      <div class="featured-main">
+        <a href="/article/<%= featured[0].slug %>" class="img-wrap">
+          <img src="<%= featured[0].image_url %>" alt="<%= featured[0].title %>" onerror="this.src='https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=800&q=80'">
+        </a>
+        <div class="content-wrap">
+          <span class="cat-tag"><%= featured[0].category_name || 'Thời Sự' %></span>
+          <h2><a href="/article/<%= featured[0].slug %>"><%= featured[0].title %></a></h2>
+          <div class="post-meta">
+            <span>📅 <%= new Date(featured[0].created_at).toLocaleDateString('vi-VN') %></span>
+            <span>👁 <%= featured[0].views %> lượt xem</span>
+          </div>
+          <p style="color: #475569; font-size: 0.95rem;"><%= featured[0].summary %></p>
+        </div>
+      </div>
+
+      <!-- Side Featured Posts -->
+      <div class="featured-sidebar">
+        <% featured.slice(1, 4).forEach(item => { %>
+          <div class="side-card">
+            <a href="/article/<%= item.slug %>">
+              <img src="<%= item.image_url %>" alt="<%= item.title %>" onerror="this.src='https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&w=300&q=80'">
+            </a>
+            <div>
+              <span class="cat-tag" style="font-size:0.7rem;"><%= item.category_name || 'Tin Tức' %></span>
+              <h4><a href="/article/<%= item.slug %>"><%= item.title %></a></h4>
+              <span style="font-size: 0.75rem; color: #94a3b8;">📅 <%= new Date(item.created_at).toLocaleDateString('vi-VN') %></span>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    </section>
+  <% } %>
+
+  <!-- Main Content Layout -->
+  <div class="main-layout">
+    <!-- Left Column: Latest News -->
+    <div>
+      <div class="section-title">
+        <h3>Dòng Sự Kiện &amp; Tin Mới Nhất</h3>
+      </div>
+
+      <div class="news-grid">
+        <% if (latest && latest.length > 0) { %>
+          <% latest.forEach(item => { %>
+            <div class="news-card">
+              <a href="/article/<%= item.slug %>" class="img-wrap">
+                <img src="<%= item.image_url %>" alt="<%= item.title %>" onerror="this.src='https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=500&q=80'">
+              </a>
+              <div class="news-card-body">
+                <span class="cat-tag"><%= item.category_name || 'Thời Sự' %></span>
+                <h4><a href="/article/<%= item.slug %>"><%= item.title %></a></h4>
+                <p><%= item.summary.substring(0, 110) %>...</p>
+                <div class="post-meta" style="margin-top: auto;">
+                  <span>📅 <%= new Date(item.created_at).toLocaleDateString('vi-VN') %></span>
+                  <span>👁 <%= item.views %> xem</span>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        <% } else { %>
+          <p>Chưa có bài viết nào được đăng.</p>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Right Column: Sidebar -->
+    <aside>
+      <!-- Most Viewed Widget -->
+      <div class="widget">
+        <h4 class="widget-title">Đọc Nhiều Nhất</h4>
+        <ul class="ranking-list">
+          <% if (mostViewed && mostViewed.length > 0) { %>
+            <% mostViewed.forEach((item, index) => { %>
+              <li class="ranking-item">
+                <span class="rank-num"><%= index + 1 %></span>
+                <div class="rank-text">
+                  <span style="font-size: 0.72rem; color: var(--primary); font-weight:700;"><%= item.category_name %></span>
+                  <h5><a href="/article/<%= item.slug %>"><%= item.title %></a></h5>
+                  <span style="font-size: 0.75rem; color: #94a3b8;">👁 <%= item.views %> lượt xem</span>
+                </div>
+              </li>
+            <% }) %>
+          <% } else { %>
+            <li>Chưa có dữ liệu bài viết.</li>
+          <% } %>
+        </ul>
+      </div>
+
+      <!-- Quick System Info Widget (Dành cho demo môn học) -->
+      <div class="widget" style="background: #0f172a; color: #e2e8f0;">
+        <h4 class="widget-title" style="color: #38bdf8; border-color: #334155;">Thông Tin Hệ Thống</h4>
+        <div style="font-size: 0.85rem; line-height: 1.8;">
+          <p>✔ <strong>Reverse Proxy:</strong> Nginx Gateway</p>
+          <p>✔ <strong>Backend Service:</strong> Node.js (Express)</p>
+          <p>✔ <strong>Database:</strong> MySQL + phpMyAdmin</p>
+          <p>✔ <strong>Giám sát:</strong> Prometheus (:9090)</p>
+          <p>✔ <strong>Trực quan:</strong> Grafana (:3000)</p>
+          <p>✔ <strong>Quản lý Log:</strong> Loki &amp; Promtail</p>
+          <div style="margin-top: 12px; padding-top: 8px; border-top: 1px dashed #334155;">
+            <a href="/admin/login" class="btn btn-primary btn-sm" style="width: 100%; text-align: center;">Vào Trang Quản Trị CMS</a>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

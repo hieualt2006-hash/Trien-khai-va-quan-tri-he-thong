@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof title !== 'undefined' ? title : 'Cổng Thông Tin Tin Tức Điện Tử' %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div class="container top-bar-inner">
+      <div id="current-time">Đang tải thời gian...</div>
+      <div>
+        <% if (currentUser) { %>
+          <span>Xin chào, <strong><%= currentUser.full_name %></strong></span> |
+          <a href="/admin/dashboard">Bảng điều khiển</a> |
+          <a href="/admin/logout">Đăng xuất</a>
+        <% } else { %>
+          <a href="/admin/login">Đăng nhập Quản trị</a>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header Main -->
+  <header class="main-header">
+    <div class="container header-inner">
+      <div class="site-logo">
+        <a href="/" style="display:flex; align-items:center; gap:12px;">
+          <div class="badge-icon">NEWS</div>
+          <div class="site-logo-text">
+            <h1>CỔNG THÔNG TIN ĐIỆN TỬ</h1>
+            <p>Báo Tin Tức Thời Sự &amp; Công Nghệ Đa Phương Tiện</p>
+          </div>
+        </a>
+      </div>
+
+      <div class="search-box">
+        <form action="/search" method="GET">
+          <input type="text" name="q" placeholder="Tìm kiếm tin tức..." required>
+          <button type="submit">Tìm</button>
+        </form>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation -->
+  <nav class="main-nav">
+    <div class="container nav-inner">
+      <ul class="nav-links">
+        <li><a href="/">Trang chủ</a></li>
+        <% if (typeof navCategories !== 'undefined' && navCategories.length > 0) { %>
+          <% navCategories.forEach(cat => { %>
+            <li><a href="/category/<%= cat.slug %>"><%= cat.name %></a></li>
+          <% }) %>
+        <% } %>
+        <% if (currentUser) { %>
+          <li><a href="/admin/dashboard" style="color: #38bdf8;">⚙ Quản trị CMS</a></li>
+        <% } %>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Flash Messages -->
+  <div class="container" style="margin-top: 15px;">
+    <% if (typeof success !== 'undefined' && success.length > 0) { %>
+      <div class="alert alert-success"><%= success %></div>
+    <% } %>
+    <% if (typeof error !== 'undefined' && error.length > 0) { %>
+      <div class="alert alert-danger"><%= error %></div>
+    <% } %>
+  </div>

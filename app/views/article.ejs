@@ -1,0 +1,85 @@
+<%- include('partials/header') %>
+
+<div class="container" style="margin-top: 24px;">
+  <div class="main-layout">
+    <!-- Left: Article Content -->
+    <main>
+      <article class="article-detail-wrap">
+        <div class="article-header">
+          <span class="cat-tag"><%= article.category_name || 'Tin Tức' %></span>
+          <h1><%= article.title %></h1>
+          <div class="post-meta">
+            <span>📅 Ngày đăng: <%= new Date(article.created_at).toLocaleString('vi-VN') %></span>
+            <span>👁 <%= article.views %> lượt xem</span>
+            <% if (article.is_featured) { %>
+              <span style="color: #e11d48; font-weight: 700;">★ Tin Tiêu Điểm</span>
+            <% } %>
+          </div>
+        </div>
+
+        <div class="article-summary-lead">
+          <%= article.summary %>
+        </div>
+
+        <div class="article-main-image">
+          <img src="<%= article.image_url %>" alt="<%= article.title %>" onerror="this.src='https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=800&q=80'">
+        </div>
+
+        <div class="article-body-content">
+          <%- article.content.replace(/\n/g, '<br>') %>
+        </div>
+
+        <div style="border-top: 1px solid var(--border-color); padding-top: 15px; margin-top: 30px; display: flex; justify-content: space-between; align-items: center;">
+          <a href="/category/<%= article.category_slug %>" class="btn btn-secondary btn-sm">← Xem thêm trong mục <%= article.category_name %></a>
+          <a href="/" class="btn btn-primary btn-sm">Trang chủ</a>
+        </div>
+      </article>
+
+      <!-- Related articles -->
+      <% if (relatedArticles && relatedArticles.length > 0) { %>
+        <div style="margin-top: 35px;">
+          <div class="section-title">
+            <h3>Bài Viết Cùng Chuyên Mục</h3>
+          </div>
+          <div class="news-grid">
+            <% relatedArticles.forEach(item => { %>
+              <div class="news-card">
+                <a href="/article/<%= item.slug %>" class="img-wrap">
+                  <img src="<%= item.image_url %>" alt="<%= item.title %>" onerror="this.src='https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=400&q=80'">
+                </a>
+                <div class="news-card-body">
+                  <h4><a href="/article/<%= item.slug %>"><%= item.title %></a></h4>
+                  <span style="font-size: 0.75rem; color: #94a3b8;">📅 <%= new Date(item.created_at).toLocaleDateString('vi-VN') %></span>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        </div>
+      <% } %>
+    </main>
+
+    <!-- Right: Sidebar -->
+    <aside>
+      <div class="widget">
+        <h4 class="widget-title">Chuyên Mục Tin</h4>
+        <ul style="list-style: none; line-height: 2.2;">
+          <% if (typeof navCategories !== 'undefined') { %>
+            <% navCategories.forEach(cat => { %>
+              <li style="border-bottom: 1px dashed var(--border-color); display: flex; justify-content: space-between;">
+                <a href="/category/<%= cat.slug %>">▸ <%= cat.name %></a>
+              </li>
+            <% }) %>
+          <% } %>
+        </ul>
+      </div>
+
+      <div class="widget" style="background: #f1f5f9;">
+        <h4 class="widget-title">Chia Sẻ &amp; Lan Tỏa</h4>
+        <p style="font-size: 0.88rem; color: #475569; margin-bottom: 12px;">Đọc tin tức chính xác, nhanh chóng trên Cổng thông tin điện tử.</p>
+        <button class="btn btn-primary btn-sm" onclick="navigator.clipboard.writeText(window.location.href); alert('Đã sao chép liên kết bài viết!');">Sao chép Link</button>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

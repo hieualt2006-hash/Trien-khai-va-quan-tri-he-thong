@@ -1,0 +1,96 @@
+<%- include('../partials/header') %>
+
+<div class="container" style="margin-top: 30px; margin-bottom: 50px;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+    <div>
+      <h2 style="color: var(--secondary);">📊 Bảng Điều Khiển Quản Trị (CMS Dashboard)</h2>
+      <p style="color: var(--text-muted); font-size: 0.9rem;">Chào mừng <strong><%= currentUser.full_name %></strong> (<%= currentUser.role %>)</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <a href="/admin/posts/new" class="btn btn-primary">+ Đăng Bài Mới</a>
+      <a href="/admin/categories" class="btn btn-secondary">Quản Lý Chuyên Mục</a>
+      <a href="/admin/posts" class="btn btn-secondary">Tất Cả Bài Viết</a>
+    </div>
+  </div>
+
+  <!-- Statistics Grid -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <h3>Tổng Số Bài Viết</h3>
+      <div class="stat-value"><%= stats.total_articles %></div>
+    </div>
+
+    <div class="stat-card blue">
+      <h3>Tổng Chuyên Mục</h3>
+      <div class="stat-value"><%= stats.total_categories %></div>
+    </div>
+
+    <div class="stat-card green">
+      <h3>Tổng Lượt Đọc Tin</h3>
+      <div class="stat-value"><%= stats.total_views %></div>
+    </div>
+
+    <div class="stat-card orange">
+      <h3>Trạng Thái Giám Sát</h3>
+      <div class="stat-value" style="font-size: 1.3rem; margin-top: 12px; color: #16a34a;">● Hoạt động</div>
+    </div>
+  </div>
+
+  <!-- Quick Monitoring Links -->
+  <div style="background: white; padding: 20px; border-radius: var(--radius); margin-bottom: 30px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);">
+    <h4 style="margin-bottom: 12px; color: var(--secondary);">🔗 Phím Tắt Quản Trị Hệ Thống (DevOps Tools)</h4>
+    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+      <a href="http://localhost:3000" target="_blank" class="btn btn-secondary btn-sm" style="background:#e0e7ff; color:#3730a3;">📈 Grafana Dashboard (:3000)</a>
+      <a href="http://localhost:9090" target="_blank" class="btn btn-secondary btn-sm" style="background:#fef3c7; color:#92400e;">🔥 Prometheus (:9090)</a>
+      <a href="http://localhost:8080" target="_blank" class="btn btn-secondary btn-sm" style="background:#d1fae5; color:#065f46;">🗄 phpMyAdmin (:8080)</a>
+      <a href="/metrics" target="_blank" class="btn btn-secondary btn-sm" style="background:#f1f5f9; color:#334155;">📊 Node.js Metrics (/metrics)</a>
+      <a href="/health" target="_blank" class="btn btn-secondary btn-sm" style="background:#f1f5f9; color:#334155;">🩺 Health Check (/health)</a>
+    </div>
+  </div>
+
+  <!-- Recent Articles -->
+  <div style="background: white; padding: 24px; border-radius: var(--radius); box-shadow: var(--shadow-sm);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+      <h3 style="color: var(--secondary); font-size: 1.15rem;">Bài Viết Mới Nhất</h3>
+      <a href="/admin/posts" style="color: var(--primary); font-size: 0.9rem; font-weight: 600;">Xem tất cả →</a>
+    </div>
+
+    <% if (recentArticles && recentArticles.length > 0) { %>
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Tiêu Đề</th>
+            <th>Chuyên Mục</th>
+            <th>Lượt Xem</th>
+            <th>Ngày Đăng</th>
+            <th>Hành Động</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% recentArticles.forEach(item => { %>
+            <tr>
+              <td>
+                <a href="/article/<%= item.slug %>" target="_blank" style="font-weight: 600; color: var(--secondary);">
+                  <%= item.title %>
+                </a>
+                <% if (item.is_featured) { %>
+                  <span class="admin-badge" style="background:#f59e0b; margin-left: 6px;">Tiêu điểm</span>
+                <% } %>
+              </td>
+              <td><span class="cat-tag" style="margin-bottom:0;"><%= item.category_name || 'Chung' %></span></td>
+              <td><%= item.views %></td>
+              <td><%= new Date(item.created_at).toLocaleDateString('vi-VN') %></td>
+              <td>
+                <a href="/admin/posts/edit/<%= item.id %>" class="btn btn-secondary btn-sm">Sửa</a>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } else { %>
+      <p style="color: var(--text-muted); padding: 20px 0;">Chưa có bài viết nào trong hệ thống.</p>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

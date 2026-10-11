@@ -1,0 +1,42 @@
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <h4>CỔNG THÔNG TIN TIN TỨC ĐIỆN TỬ</h4>
+          <p>Dự án triển khai hệ thống phân tán và quản trị hệ thống phần mềm (Đề 19: Website Tin tức / Cổng thông tin).</p>
+          <p style="margin-top: 10px; font-size: 0.8rem; color: #64748b;">
+            Stack công nghệ: Node.js, Express, MySQL, Nginx Reverse Proxy, Prometheus, Grafana, Loki &amp; Promtail.
+          </p>
+        </div>
+
+        <div class="footer-col">
+          <h4>CHUYÊN MỤC CHÍNH</h4>
+          <ul style="list-style: none; font-size: 0.9rem; line-height: 2;">
+            <% if (typeof navCategories !== 'undefined' && navCategories.length > 0) { %>
+              <% navCategories.slice(0, 5).forEach(cat => { %>
+                <li><a href="/category/<%= cat.slug %>">▸ <%= cat.name %></a></li>
+              <% }) %>
+            <% } %>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>QUẢN TRỊ &amp; GIÁM SÁT</h4>
+          <ul style="list-style: none; font-size: 0.9rem; line-height: 2;">
+            <li><a href="/metrics" target="_blank">▸ Prometheus Metrics (/metrics)</a></li>
+            <li><a href="/health" target="_blank">▸ Health Check (/health)</a></li>
+            <li><a href="/admin/login">▸ Đăng nhập CMS Admin</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2026 Cổng Thông Tin Tin Tức. Bản quyền thuộc về Đồ Án Triển Khai &amp; Quản Trị Hệ Thống Phần Mềm.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/main.js"></script>
+</body>
+</html>
