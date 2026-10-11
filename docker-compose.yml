@@ -1,0 +1,270 @@
+version: '3.8'
+
+# ==============================================================================
+# ĐỀ 19: WEBSITE TIN TỨC / CỔNG THÔNG TIN
+# MÔN: TRIỂN KHAI VÀ QUẢN TRỊ HỆ THỐNG PHẦN MỀM (TKQT HTPM K23)
+# Tác giả: Bành Trung Hiệu - MSSV: DTC245160021
+# Architecture:
+# - Frontend Reverse Proxy: Nginx (SSL/TLS, Security Headers, Rate Limiting)
+# - Application: Node.js Express (Prometheus /metrics + Winston JSON Logging)
+# - Database: MySQL 8.0 (No host port exposed for security) + phpMyAdmin
+# - Observability: Prometheus + Grafana (Pre-provisioned dashboards) + Exporters
+# - Centralized Logging: Loki + Promtail (LogQL queries ready)
+# ==============================================================================
+
+services:
+  # ==========================================
+  # 1. WEB APPLICATION (NEWS PORTAL)
+  # ==========================================
+  app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: news_portal_app
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      DB_HOST: mysql
+      DB_USER: news_user
+      DB_PASSWORD: NewsSecure@2026
+      DB_NAME: news_portal_db
+      SESSION_SECRET: NewsPortal_DevOps_Secret_Key_2026
+    volumes:
+      - app_logs:/app/logs
+    networks:
+      - frontend_net
+      - backend_net
+      - monitoring_net
+    depends_on:
+      mysql:
+        condition: service_healthy
+    # HARDENING: Cap resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '0.80'
+          memory: 512M
+
+  # ==========================================
+  # 2. DATABASE: MYSQL 8.0 (ISOLATED BACKEND)
+  # ==========================================
+  mysql:
+    image: mysql:8.0
+    container_name: news_portal_mysql
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: RootSecurePass@2026
+      MYSQL_DATABASE: news_portal_db
+      MYSQL_USER: news_user
+      MYSQL_PASSWORD: NewsSecure@2026
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    # HARDENING: DO NOT expose port 3306 to host! Kept internal in backend_net.
+    networks:
+      - backend_net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pRootSecurePass@2026"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+
+  # ==========================================
+  # 3. DATABASE MANAGEMENT: PHPMYADMIN
+  # ==========================================
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: news_portal_pma
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      UPLOAD_LIMIT: 30M
+    networks:
+      - backend_net
+      - frontend_net
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  # ==========================================
+  # 4. REVERSE PROXY: NGINX GATEWAY
+  # ==========================================
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: news_portal_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+    networks:
+      - frontend_net
+      - monitoring_net
+    depends_on:
+      - app
+      - phpmyadmin
+
+  # ==========================================
+  # 5. MONITORING: PROMETHEUS
+  # ==========================================
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: news_portal_prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    networks:
+      - monitoring_net
+    depends_on:
+      - app
+
+  # ==========================================
+  # 6. DASHBOARD & VISUALIZATION: GRAFANA
+  # ==========================================
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: news_portal_grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards/json:ro
+      - grafana_data:/var/lib/grafana
+    networks:
+      - monitoring_net
+    depends_on:
+      - prometheus
+
+  # ==========================================
+  # 7. EXPORTER: MYSQLD EXPORTER
+  # ==========================================
+  mysqld-exporter:
+    image: prom/mysqld-exporter:v0.15.1
+    container_name: news_portal_mysqld_exporter
+    restart: unless-stopped
+    environment:
+      - DATA_SOURCE_NAME=mysqld_exporter:ExporterSecure@2026@(mysql:3306)/
+    networks:
+      - backend_net
+      - monitoring_net
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  # ==========================================
+  # 8. EXPORTER: CADVISOR (CONTAINER METRICS)
+  # ==========================================
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: news_portal_cadvisor
+    restart: unless-stopped
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    privileged: true
+    devices:
+      - /dev/kmsg
+    networks:
+      - monitoring_net
+
+  # ==========================================
+  # 9. EXPORTER: NODE EXPORTER (HOST METRICS)
+  # ==========================================
+  node-exporter:
+    image: prom/node-exporter:v1.7.0
+    container_name: news_portal_node_exporter
+    restart: unless-stopped
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    networks:
+      - monitoring_net
+
+  # ==========================================
+  # 10. CENTRALIZED LOGGING: LOKI
+  # ==========================================
+  loki:
+    image: grafana/loki:3.0.0
+    container_name: news_portal_loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./logging/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - loki_data:/tmp/loki
+    networks:
+      - monitoring_net
+
+  # ==========================================
+  # 11. LOG COLLECTOR & SHIPPER: PROMTAIL
+  # ==========================================
+  promtail:
+    image: grafana/promtail:3.0.0
+    container_name: news_portal_promtail
+    restart: unless-stopped
+    volumes:
+      - ./logging/promtail/promtail-config.yml:/etc/promtail/config.yml:ro
+      - nginx_logs:/var/log/nginx:ro
+      - app_logs:/var/log/app:ro
+    networks:
+      - monitoring_net
+    depends_on:
+      - loki
+
+# ==========================================
+# HARDENING: NETWORK SEGREGATION
+# ==========================================
+networks:
+  frontend_net:
+    driver: bridge
+  backend_net:
+    driver: bridge
+  monitoring_net:
+    driver: bridge
+
+# ==========================================
+# PERSISTENT VOLUMES
+# ==========================================
+volumes:
+  mysql_data:
+  prometheus_data:
+  grafana_data:
+  loki_data:
+  nginx_logs:
+  app_logs:
